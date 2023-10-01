@@ -1,153 +1,267 @@
-import http, { IncomingMessage, ServerResponse } from "http";
+import http, {ServerResponse, IncomingMessage} from "http";
 
-const port: Number = 2000;
+const Port = 2309;
 
-interface iData {
-  id: number;
-  state: string;
-  precipitation: number;
-  temperature: number;
+interface iMessage{
+    message: string,
+    data: null | {} |{}[],
+    success: boolean
+};
+type iUsers ={
+    id: number,
+    userName: string,
+    salary: string,
+    expenses: string,
+    paymentType: string,
+    occupation: string
 }
 
-interface iMessage {
-  message: string;
-  data: null | {} | {}[];
-  success: boolean;
-}
+let arrUsers: iUsers[] = [
+    {
+        id: 1,
+        userName: "Mr Nonso Amadi",
+        salary: "₦50000",
+        expenses: "₦45000",
+        paymentType: "Monthly",
+        occupation: "Banker"
+    },
+    {
+        id: 2,
+        userName: "Mrs Ngozi Nduka",
+        salary: "4500",
+        expenses: "₦5000",
+        paymentType: "Daily",
+        occupation: "Trader"
 
-let Weather: iData[] = [
-  {
-    id: 1,
-    state: "Abia",
-    precipitation: 30,
-    temperature: 50,
-  },
-  {
-    id: 2,
-    state: "Edo",
-    precipitation: 30,
-    temperature: 50,
-  },
-  {
-    id: 3,
-    state: "Imo",
-    precipitation: 30,
-    temperature: 50,
-  },
-  {
-    id: 4,
-    state: "Niger",
-    precipitation: 30,
-    temperature: 50,
-  },
-  {
-    id: 5,
-    state: "Bauchi",
-    precipitation: 30,
-    temperature: 50,
-  },
-  {
-    id: 6,
-    state: "Kwara",
-    precipitation: 30,
-    temperature: 50,
-  },
-  {
-    id: 7,
-    state: "Akwa-Ibom",
-    precipitation: 30,
-    temperature: 50,
-  },
-  {
-    id: 8,
-    state: "Enugu",
-    precipitation: 55,
-    temperature: 15,
-  },
-  {
-    id: 9,
-    state: "Kogi",
-    precipitation: 12,
-    temperature: 60,
-  },
-  {
-    id: 10,
-    state: "Ogun",
-    precipitation: 60,
-    temperature: 20,
-  },
-  {
-    id: 11,
-    state: "Benue",
-    precipitation: 70,
-    temperature: 20,
-  },
-  {
-    id: 12,
-    state: "Kano",
-    precipitation: 38,
-    temperature: 60,
-  },
+    },
+    {
+        id: 3,
+        userName: "Mr Ola Adeniyi",
+        salary: "₦3500",
+        expenses: "₦4000",
+        paymentType: "Weekly",
+        occupation: "Labour"
+
+    },
+    {
+        id: 4,
+        userName: "Mrs Selemo salawu-lawa",
+        salary: "₦500000",
+        expenses: "₦350000",
+        paymentType: "Monthly",
+        occupation: "Fintech"
+
+    },
+    {
+        id: 5,
+        userName: "Mr Daneil Eromonsele",
+        salary: "₦65000",
+        expenses: "₦70000",
+        paymentType: "Monthly",
+        occupation: "Truck-Driver"
+
+    },
+    {
+        id: 6,
+        userName: "Mrs Sunday Peter",
+        salary: "₦50000",
+        expenses: "₦50000",
+        paymentType: "Monthly",
+        occupation: "Banker"
+
+    },
 ];
 
-const server = http.createServer(
-  (req: IncomingMessage, res: ServerResponse<IncomingMessage>) => {
-    res.setHeader("Content-Type", "Application/JSon");
-    let { method, url } = req;
-    let status = 404;
+const Server = http.createServer((req:IncomingMessage,  res: ServerResponse<IncomingMessage>)=>{
+   res.setHeader("content-Type", "application/json");
+ 
+   let status = 404
+   const response:iMessage = {
+     message: "failed check browser",
+     success: false,
+     data: null
+   };
 
-    let response: iMessage = {
-      message: "Failed",
-      success: false,
-      data: null,
-    };
-    let Container: any = [];
-    req
-      .on("data", (chunk: any) => {
-        Container.push(chunk);
-      })
-      .on("end", () => {
-        // GET METHOD
-        if (method === "GET" && url === "/getWeather") {
-          status = 200;
-          response.message = "Wathr info successfully retrieved ";
-          response.data = Weather;
+   let {method, url} = req;
+
+   let Database:any = []
+ 
+   req.on("data", (chunk:any)=>{
+      Database.push(chunk)
+   }).on("end", ()=>{
+
+    //GET METHOD
+       if(method === "GET" && url === "/Nzube"){
+         status = 200;
+         response.message = "sucessful";
+         response.data = arrUsers;
+         response.success =true;
+
+         res.write(JSON.stringify({response, status}));
+        res.end()
+       }else{
+        status = 404;
+        response.message = "unable to run";
+        response.data = null;
+        response.success =false;
+
+        res.write(JSON.stringify({response, status}));
+        res.end()
+       }
+
+       //post
+       if (url === "/" && method === "POST") {
+           status = 201;
+          const post = JSON.parse(Database)
+          arrUsers.push(post);
+           
+          response.message = "upload successful";
+          response.data = arrUsers;
           response.success = true;
-          res.write(JSON.stringify({ response, status }));
+
+          res.write(JSON.stringify({response, status}));
           res.end();
-        }
+       }else{
+        status = 404;
+        response.message = "upload failed";
+        response.data = null;
+        response.success = false;
 
-        if (method === "POST" && url === "/ad") {
-          const body = JSON.parse(Container);
+        res.write(JSON.stringify({response, status}));
+        res.end();
+       };
 
-          let confirm = Weather.find((el) => {
-            return el.id === body.id;
+    //patch 
+    if(method === "PATCH"){
+       const patch = JSON.parse(Database);
+
+       let newData:any = url?.split("/")[1];
+       let newDataValue = parseInt(newData);
+
+       let get = arrUsers.some((el)=>{
+        return el.id === newDataValue;
+       });
+
+       if (!get) {
+          status = 404;
+
+          response.message = "user don't exits";
+          response.data = null;
+          response.success = false;
+
+          res.write(JSON.stringify({response, status}));
+          res.end();
+       }else{
+           const updated = patch.userName;
+
+           arrUsers = arrUsers.map((user:any)=>{
+               if(user?.id === newDataValue){
+                  return{
+                    id: user?.id,
+                    userName: updated,
+                    occupation: user?.occupation,
+                    salary: user?.salary,
+                    expenses: user?.expenses,
+                    paymentType: user?.paymentType
+                  }
+               }
+               return user;
+           });
+           status = 200;
+           response.data = arrUsers;
+           response.message = "update successful";
+           response.success = true;
+
+           res.write(JSON.stringify({response, status}));
+           res.end();
+       }
+    }
+
+    //PUT method
+    if (method === "PUT") {
+          const build = JSON.parse(Database);
+
+          let Data:any = url?.split("/")[1];
+          let newValue = parseInt(Data);
+
+          let find = arrUsers.some((el)=>{
+            return el.id === newValue;
           });
-
-          if (confirm) {
+          if (!find) {
             status = 404;
-
-            response.message = "exist";
-            response.success = false;
+  
+            response.message = "user don't exits";
             response.data = null;
-            res.write(JSON.stringify({ status, response }));
+            response.success = false;
+            
+            res.write(JSON.stringify({response, status}));
             res.end();
-
-            return;
-          }
-          Weather.push(body);
-          status = 200;
-
-          response.message = "Added successfully";
-          response.success = true;
-          response.data = Weather;
-          res.write(JSON.stringify({ status, response }));
-          res.end();
+        }else{
+            const updated = build.salary;
+            
+            arrUsers = arrUsers.map((user:any)=>{
+                 if(user?.id === newValue){
+                     return{
+                         id: user?.id,
+                         userName:user.userName,
+                         occupation: user?.occupation,
+                         salary: updated,
+                         expenses: user?.expenses,
+                         paymentType: user?.paymentType
+                        }
+                    }
+                    return user;
+                });
+                status = 200;
+                response.data = arrUsers;
+                response.message = "update successful";
+                response.success = true;
+                
+                res.write(JSON.stringify({response, status}));
+                res.end();
+            }
         }
-      });
-  }
-);
 
-server.listen(port, () => {
-  console.log(`listen on port:${port}`);
+       //Delete method
+       if (method === "DELETE") {
+        // const build = JSON.parse(Database);
+
+        let Data:any = url?.split("/")[1];
+        let newValue = parseInt(Data);
+
+         arrUsers = arrUsers.filter((el)=>{
+          return el.id !== newValue;
+        });
+        status = 200,
+        response.message = "Account Deleted";
+        response.data = arrUsers;
+        response.success = true;
+
+        res.write(JSON.stringify({response, status}));
+        res.end()
+    }else{
+        status = 404,
+        response.message = "user not found";
+        response.data = null;
+        response.success = false;
+
+        res.write(JSON.stringify({response, status}));
+        res.end()
+    }
+
+    //Get expenses
+    if (method === "GET") {
+        const build:any = url?.split("/")[1];
+        let newValue = parseInt(build);
+
+        let test:any = arrUsers.filter((el)=>{
+            return el.id === newValue;
+        });
+        
+    } 
+   });
+
 });
+Server.listen(Port, ()=>{
+    console.log("server listening up and running", Port);
+})
